@@ -12,66 +12,51 @@ import (
 var reader = NewWordScanner(os.Stdin)
 var writer = NewBufferedWriter(os.Stdout)
  
-// var adjacencyList map[int][]int;
-// var currSet map[int]bool;
-// var maxSet map[int]bool;
+var adjacencyList map[int][]int;
+var currSet map[int]bool;
+var maxSet map[int]bool;
 func main() {
 	defer writer.Flush()
 	t := reader.NextInt64()
 	for ; t > 0; t-- {
 		n,m:= reader.NextInt(),reader.NextInt()
-		income:=make([]int64,n+1)
-		population:=make([]int64,n+1)
-		for i:=1;i<n+1;i++{
-			income[i]=reader.NextInt64()
+		income:=make([]int,n)
+		population:=make([]int,n)
+		perCapita:=make([]int,n)
+		for i:=0;i<n;i++{
+			x:=reader.NextInt()
+			income[i]=x
+			perCapita[i]=x
 		}
-		for i:=1;i<n+1;i++{
-			population[i]=reader.NextInt64()
+		max:=0
+		for i:=0;i<n;i++{
+			x:=reader.NextInt()
+			population[i]=x
+			perCapita[i] /= x
+			if(perCapita[i]>max){
+				max=perCapita[i]
+			}
 		}
-		g:=make([][]int64,200005)
-		for i:= range g {
-			g[i]=make([]int64,0)
-		}
+		adjacencyList=make(map[int][]int)
+		citiesMax:=make(map[int]bool)
+		for i:=0;i<n;i++ {
+			if perCapita[i]==max {
+				citiesMax[i+1]=true
+			}
+			adjacencyList[i]=make([]int,0)
 
+		}
+		maxSet=make(map[int]bool)
 		for i:=0;i<m;i++ {
-			u:=reader.NextInt64()
-			v:=reader.NextInt64()
-			g[u]=append(g[u],v)
-			g[v]=append(g[v],u)
-		}
-		num:=income[1]
-		den:=population[1]
-		for i:=2;i<n;i++ {
-			if(income[i]*den > population[i]*num){
-				den=population[i];
-				num=income[i];
+			u:=reader.NextInt()
+			v:=reader.NextInt()
+			if(citiesMax[u]==true && citiesMax[v]==true){
+				addEdge(u-1,v-1)
 			}
 		}
-		v:=make([]int64,n+1)
-		ans:=[]int64{}
-		for i:=1;i<n+1;i++ {
-			if(v[i]==0 && num*population[i]==den*income[i]) {
-				queue:=[]int64{int64(i)}
-				temp:=[]int64{}
-				v[i]=1
-				for len(queue)!=0 {
-					top:=queue[0]
-					queue=queue[1:]
-					temp=append(temp,top)
-					for _,x:=range g[top] {
-						if(v[x]==0 && num*population[x]==den*income[x]){
-							queue=append(queue,x)
-							v[x]=1
-						}
-					}
-				}
-				if len(temp)>len(ans){
-					ans=temp
-				}
-			}
-		}
-		writer.Printf("%d\n",len(ans))
-		for _,k:=range ans {
+		connectedComponents(n)
+		writer.Printf("%d\n",len(maxSet))
+		for k:=range maxSet {
 			writer.Printf("%d ",k)
 		}
 		writer.Printf("\n");
@@ -79,27 +64,31 @@ func main() {
 }
  
 
-// func dfs (node int,visited *[]bool){
-// 	(*visited)[node]=true
-// 	currSet[node+1]=true
-// 	for _,v:=range adjacencyList[node] {
-// 		if((*visited)[v]==false){
-// 			dfs(v,visited)
-// 		}
-// 	}
-// }
-// func connectedComponents(n int) {
-// 	visited:=make([]bool,n)
-// 	for v:=0;v<n;v++ {
-// 		if(visited[v]==false) {
-// 			currSet=make(map[int]bool)
-// 			dfs(v,&visited);
-// 			if len(currSet)>len(maxSet) {
-// 				maxSet=currSet
-// 			}
-// 		}
-// 	}
-// }	
+func addEdge(m,n int) {
+	adjacencyList[m]=append(adjacencyList[m],n)
+	adjacencyList[n]=append(adjacencyList[n],m)
+}
+func dfs (node int,visited *[]bool){
+	(*visited)[node]=true
+	currSet[node+1]=true
+	for _,v:=range adjacencyList[node] {
+		if((*visited)[v]==false){
+			dfs(v,visited)
+		}
+	}
+}
+func connectedComponents(n int) {
+	visited:=make([]bool,n)
+	for v:=0;v<n;v++ {
+		if(visited[v]==false) {
+			currSet=make(map[int]bool)
+			dfs(v,&visited);
+			if len(currSet)>len(maxSet) {
+				maxSet=currSet
+			}
+		}
+	}
+}	
 
 
 /*********************** I/O ***********************/
